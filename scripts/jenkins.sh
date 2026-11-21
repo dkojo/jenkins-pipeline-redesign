@@ -34,7 +34,9 @@ case "$1" in
     for _ in $(seq 1 600); do
       if console | grep -q "STAGE-OK $stage\$"; then
         # Show this stage's own lines: from where it started to its marker (parallel stages can interleave)
-        console | awk -v s="($stage)" -v m="STAGE-OK $stage" 'index($0, s) {on=1} on && $0 !~ /\[Pipeline\]/ {print} index($0, m) {exit}' | tail -12
+        log=$(console)
+        printf '%s
+' "$log" | awk -v s="($stage)" -v m="STAGE-OK $stage" 'index($0, s) {on=1} on && $0 !~ /\[Pipeline\]/ {print} index($0, m) {exit}' | tail -12 || true
         echo "Jenkins stage passed: $stage"
         exit 0
       fi
