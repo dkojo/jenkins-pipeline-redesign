@@ -1,0 +1,75 @@
+name: jenkins
+
+# GitHub Actions only hosts the run: it boots a real Jenkins (configured as code), starts the Jenkinsfile,
+# and has one step per Jenkins stage that waits for that stage. So each step here mirrors a Jenkins stage.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  jenkins:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Start Jenkins (configuration as code)
+        run: |
+          git checkout -B jenkins-run   # the branch Jenkins builds, pointing at this exact commit
+          docker compose up -d --build
+          bash scripts/jenkins.sh wait-ready
+
+      - name: Trigger the Jenkins pipeline
+        run: bash scripts/jenkins.sh trigger
+
+      - name: "Jenkins: .NET build"
+        run: bash scripts/jenkins.sh follow ".NET build"
+      - name: "Jenkins: Java build"
+        run: bash scripts/jenkins.sh follow "Java build"
+      - name: "Jenkins: Node build"
+        run: bash scripts/jenkins.sh follow "Node build"
+
+      - name: "Jenkins: .NET test"
+        run: bash scripts/jenkins.sh follow ".NET test"
+      - name: "Jenkins: Java test"
+        run: bash scripts/jenkins.sh follow "Java test"
+      - name: "Jenkins: Node test"
+        run: bash scripts/jenkins.sh follow "Node test"
+
+      - name: "Jenkins: .NET package"
+        run: bash scripts/jenkins.sh follow ".NET package"
+      - name: "Jenkins: Java package"
+        run: bash scripts/jenkins.sh follow "Java package"
+      - name: "Jenkins: Node package"
+        run: bash scripts/jenkins.sh follow "Node package"
+
+      - name: "Jenkins: Deploy to Tomcat and NGINX"
+        run: bash scripts/jenkins.sh follow "Deploy to Tomcat and NGINX"
+
+      - name: "Jenkins: Smoke test"
+        run: bash scripts/jenkins.sh follow "Smoke test"
+
+      - name: "Jenkins: Release"
+        run: bash scripts/jenkins.sh follow "Release"
+
+      - name: Jenkins result
+        run: |
+          bash scripts/jenkins.sh result
+          echo "Through NGINX from the runner too:"; curl -s localhost:8088/catalog/products; echo
+
+      - name: Save the Jenkins console log
+        if: always()
+        run: curl -s -u admin:admin http://localhost:8090/job/redesign/1/consoleText > jenkins-console.txt || true
+
+      - name: Upload the Jenkins console log
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: jenkins-console
+          path: jenkins-console.txt

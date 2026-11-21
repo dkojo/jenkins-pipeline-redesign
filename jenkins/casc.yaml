@@ -1,0 +1,35 @@
+# Jenkins configured as code: nothing is clicked in the UI.
+jenkins:
+  systemMessage: "Redesigned pipelines: one Jenkinsfile, one shared library"
+  numExecutors: 4
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: admin       # throwaway Jenkins that only lives for one CI run
+  authorizationStrategy: loggedInUsersCanDoAnything
+
+unclassified:
+  # The shared library: reusable build, test, package and deploy steps for every language
+  globalLibraries:
+    libraries:
+      - name: redesign
+        defaultVersion: jenkins-run
+        retriever:
+          modernSCM:
+            libraryPath: jenkins/shared-library/
+            scm:
+              git:
+                remote: file:///repo
+
+jobs:
+  - script: >
+      pipelineJob('redesign') {
+        definition {
+          cpsScm {
+            scm { git { remote { url('file:///repo') }; branch('jenkins-run') } }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }

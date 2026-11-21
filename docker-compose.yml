@@ -1,0 +1,19 @@
+# A real Jenkins for one run. The repo is mounted read-only at /repo (the pipeline and shared library come from there),
+# and the Docker socket lets pipeline steps start toolchain and app containers next to it.
+services:
+  jenkins:
+    build: ./jenkins
+    container_name: jenkins
+    ports: ["8090:8080"]
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/repo:ro
+    networks: [default, apps]
+
+volumes:
+  jenkins_home:
+
+networks:
+  apps:
+    name: apps

@@ -1,0 +1,9 @@
+services/catalog/**/bin/
+services/catalog/**/obj/
+services/catalog/out/
+services/orders/target/
+services/cart/node_modules/
+services/cart/*.tgz
+services/cart/package-lock.json
+release.json
+jenkins-console.txt

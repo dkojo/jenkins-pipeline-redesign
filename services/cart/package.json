@@ -1,0 +1,8 @@
+{
+  "name": "cart",
+  "version": "1.0.0",
+  "description": "cart: the Node.js microservice, served behind NGINX at /cart/",
+  "type": "module",
+  "private": true,
+  "scripts": { "test": "node --test", "start": "node server.js" }
+}
