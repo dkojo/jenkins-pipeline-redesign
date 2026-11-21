@@ -33,9 +33,8 @@ case "$1" in
     stage="$2"
     for _ in $(seq 1 600); do
       if console | grep -q "STAGE-OK $stage\$"; then
-        # Show this stage's own lines (parallel branches prefix theirs with [.NET], [Java] or [Node])
-        branch=${stage%% *}
-        console | grep -E "^\[$branch\]|\($stage\)|STAGE-OK $stage" | grep -vE '\[Pipeline\] (\}|// )' | tail -15 || true
+        # Show this stage's own lines: from where it started to its marker (parallel stages can interleave)
+        console | awk -v s="($stage)" -v m="STAGE-OK $stage" 'index($0, s) {on=1} on && $0 !~ /\[Pipeline\]/ {print} index($0, m) {exit}' | tail -12
         echo "Jenkins stage passed: $stage"
         exit 0
       fi
