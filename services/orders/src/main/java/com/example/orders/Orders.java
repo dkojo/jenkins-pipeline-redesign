@@ -6,7 +6,7 @@ import java.util.List;
 public final class Orders {
     public record Order(int id, String sku, int quantity) {}
 
-    public static final List<Order> ALL = List.of(new Order(1001, "KB-01", 2), new Order(1002, "MN-02", 1));
+    public static final List<Order> ALL = List.of(new Order(1001, "KB-01", 2), new Order(1002, "MN-02", 1), new Order(1003, "HS-03", 4));
 
     private Orders() {}
 
