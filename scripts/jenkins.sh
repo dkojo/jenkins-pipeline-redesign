@@ -32,11 +32,10 @@ case "$1" in
   follow)
     stage="$2"
     for _ in $(seq 1 600); do
-      if console | grep -q "STAGE-OK $stage\$"; then
+      log=$(console)   # read once: piping curl straight into grep -q or awk can break the pipe
+      if grep -q "STAGE-OK $stage\$" <<< "$log"; then
         # Show this stage's own lines: from where it started to its marker (parallel stages can interleave)
-        log=$(console)
-        printf '%s
-' "$log" | awk -v s="($stage)" -v m="STAGE-OK $stage" 'index($0, s) {on=1} on && $0 !~ /\[Pipeline\]/ {print} index($0, m) {exit}' | tail -12 || true
+        awk -v s="($stage)" -v m="STAGE-OK $stage" 'index($0, s) {on=1} on && $0 !~ /\[Pipeline\]/ {print} index($0, m) {exit}' <<< "$log" | tail -12
         echo "Jenkins stage passed: $stage"
         exit 0
       fi
